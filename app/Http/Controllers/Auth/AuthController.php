@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use Illuminate\Contracts\Auth\Guard;
+use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -15,7 +20,12 @@ class AuthController extends Controller
         $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
 
-    public function login(Request $request)
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws ValidationException
+     */
+    public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -41,7 +51,12 @@ class AuthController extends Controller
         return $this->respondWithToken($token);
     }
 
-    public function register(Request $request)
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|between:2,100',
@@ -59,32 +74,44 @@ class AuthController extends Controller
             'password' => bcrypt($request->password)
         ]);
 
-        return response()->json([
-            'message' => 'Usuário criado com sucesso',
-            'user' => $user
-        ]);
+        return ApiResponse::success($user, 'Usuário criado com sucesso');
     }
 
-    public function logout()
+
+    /**
+     * @return JsonResponse
+     */
+    public function logout(): JsonResponse
     {
         $this->guard()->logout();
 
-        return response()->json(['message' => 'Usuário deslogado com sucesso']);
+        return ApiResponse::success( null, 'Usuário deslogado com sucesso');
     }
 
 
-    public function profile()
+    /**
+     * @return JsonResponse
+     */
+    public function profile(): JsonResponse
     {
-        return response()->json($this->guard()->user());
+        return ApiResponse::success($this->guard()->user());
     }
 
 
-    public function refresh()
+    /**
+     * @return JsonResponse
+     */
+    public function refresh(): JsonResponse
     {
         return $this->respondWithToken($this->guard()->refresh());
     }
 
-    protected function respondWithToken($token)
+
+    /**
+     * @param $token
+     * @return JsonResponse
+     */
+    protected function respondWithToken($token): JsonResponse
     {
         return response()->json([
             'token' => $token,
@@ -93,6 +120,10 @@ class AuthController extends Controller
         ]);
     }
 
+
+    /**
+     * @return Guard|StatefulGuard
+     */
     protected function guard()
     {
         return Auth::guard();

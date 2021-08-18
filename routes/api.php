@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Movie\TagController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,15 @@ Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('profile', [AuthController::class, 'profile']);
     Route::post('refresh', [AuthController::class, 'refresh']);
+
+});
+
+Route::group(['middleware' => 'api'], function () {
+
+    /**
+     * Rotas de Tags de Filmes
+     */
+    Route::get('movie/tags', [TagController::class, 'index']);
 
 });
 
